@@ -9,3 +9,4 @@ outputs/
 *.bin
 *.pt
 *.zip
+*.egg-info/
