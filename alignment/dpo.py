@@ -48,11 +48,15 @@ def pair_logprobs(model, pair_batch: dict, pad_token_id: int) -> tuple[torch.Ten
 
 
 def dpo_loss_from_batch(policy_model, reference_model, pair_batch: dict, beta: float, pad_token_id: int):
-    """DPO loss for one preference batch; the reference runs without gradients."""
+    """DPO loss for one preference batch; the reference runs without gradients.
 
-    policy_chosen, policy_rejected = pair_logprobs(policy_model, pair_batch, pad_token_id)
+    The reference pass runs first so its temporary activations are freed before
+    the policy pass stores activations for backpropagation.
+    """
+
     with torch.no_grad():
         reference_chosen, reference_rejected = pair_logprobs(reference_model, pair_batch, pad_token_id)
+    policy_chosen, policy_rejected = pair_logprobs(policy_model, pair_batch, pad_token_id)
     return dpo_loss_from_logps(policy_chosen, policy_rejected, reference_chosen, reference_rejected, beta)
 
 
