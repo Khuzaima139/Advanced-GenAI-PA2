@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import threading
 import time
 from collections import Counter, defaultdict
 from pathlib import Path
@@ -18,6 +19,32 @@ SAFETY_CRITERIA = (
 )
 SAFETY_DATASETS = {"hh_rlhf_style_eval"}
 VALID_WINNERS = {"A", "B", "TIE"}
+
+
+def call_with_timeout(fn, argument, timeout_seconds: float):
+    """Run fn(argument) in a daemon thread; raise TimeoutError if it does not return in time.
+
+    A request that never returns would otherwise stall the whole run, because
+    retries only trigger on errors. A timed-out thread is abandoned (daemon), so
+    it cannot block the program from exiting.
+    """
+
+    result = {}
+
+    def target():
+        try:
+            result["value"] = fn(argument)
+        except BaseException as error:  # re-raised in the calling thread
+            result["error"] = error
+
+    worker = threading.Thread(target=target, daemon=True)
+    worker.start()
+    worker.join(timeout_seconds)
+    if worker.is_alive():
+        raise TimeoutError(f"judge request exceeded {timeout_seconds:.0f} s")
+    if "error" in result:
+        raise result["error"]
+    return result["value"]
 
 
 def build_judge_prompt(items: list[dict], safety: bool) -> str:
@@ -120,12 +147,14 @@ def run_judging(
     max_retries: int = 3,
     reuse_judgments: bool = False,
     eval_type: str = "auto",
+    request_timeout: float | None = None,
     sleep_fn=time.sleep,
 ) -> dict:
     """Judge pairs in small batches, checkpointing after every batch.
 
-    judge_fn(prompt) -> str sends one request. A batch is retried up to
-    max_retries times; unresolved batches go to the failures file and are
+    judge_fn(prompt) -> str sends one request. A request that errors, returns
+    unreadable output, or exceeds request_timeout seconds counts as a failed
+    attempt. A batch is retried up to max_retries times; unresolved batches go to the failures file and are
     judged again on the next resumed run.
     """
 
@@ -153,7 +182,7 @@ def run_judging(
             requests += 1
             raw = None
             try:
-                raw = judge_fn(prompt)
+                raw = call_with_timeout(judge_fn, prompt, request_timeout) if request_timeout else judge_fn(prompt)
                 verdicts = parse_verdicts(raw, len(batch))
                 break
             except Exception as error:  # network errors, proxy denials, unparseable output

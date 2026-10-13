@@ -126,3 +126,24 @@ def test_unresolved_batches_go_to_failure_log_and_are_retried_on_resume(tmp_path
     resumed = run_judging(pairs, judged, failures, works, "fake", reuse_judgments=True, sleep_fn=lambda s: None)
     assert resumed["counts"]["tie"] == 7 and resumed["counts"]["failure"] == 0
     assert resumed["win_rate_excluding_ties"] is None and resumed["win_rate_ties_as_half"] == 0.5
+
+
+def test_hung_request_times_out_and_is_retried(tmp_path):
+    import time as _time
+
+    _, out = build_pairs(tmp_path, n=5)
+    pairs = read_jsonl(out)
+    calls = []
+
+    def hangs_once(prompt):
+        calls.append(1)
+        if len(calls) == 1:
+            _time.sleep(30)  # simulates a proxy request that never comes back
+        return json.dumps([{"item": i, "winner": "B"} for i in range(1, 6)])
+
+    start = _time.time()
+    summary = run_judging(pairs, tmp_path / "t.jsonl", tmp_path / "t_failures.jsonl", hangs_once, "fake",
+                          request_timeout=0.5, sleep_fn=lambda s: None)
+    assert _time.time() - start < 5
+    assert len(calls) == 2 and summary["retries_this_run"] == 1
+    assert summary["counts"]["failure"] == 0

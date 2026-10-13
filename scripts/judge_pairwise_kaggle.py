@@ -41,6 +41,7 @@ def main() -> None:
     parser.add_argument("--max_retries", type=int, default=3)
     parser.add_argument("--reuse_judgments", action="store_true")
     parser.add_argument("--eval_type", choices=["auto", "general", "safety"], default="auto")
+    parser.add_argument("--request_timeout", type=float, default=120.0, help="seconds before a request counts as failed")
     args = parser.parse_args()
     if args.sleep_seconds < 5:
         raise SystemExit("sleep_seconds must be at least 5 to avoid overloading the model proxy")
@@ -53,6 +54,7 @@ def main() -> None:
         pairs, output_path, failures_path, judge_fn, resolved_name,
         batch_size=args.batch_size, sleep_seconds=args.sleep_seconds, max_retries=args.max_retries,
         reuse_judgments=args.reuse_judgments, eval_type=args.eval_type,
+        request_timeout=args.request_timeout,
     )
     print(json.dumps({k: summary[k] for k in ("judge_model", "num_pairs", "counts",
                                               "win_rate_excluding_ties", "win_rate_ties_as_half",
