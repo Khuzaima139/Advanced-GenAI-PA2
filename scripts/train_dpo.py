@@ -34,12 +34,16 @@ def build_optimizer(name: str, params, lr: float):
 
 
 @torch.no_grad()
-def reference_val_logps(reference, val_batches, pad_token_id):
-    """The reference is frozen, so its validation log-probs never change; compute them once."""
+def reference_val_logps(reference, val_batches, pad_token_id, use_amp):
+    """The reference is frozen, so its validation log-probs never change; compute them once.
+
+    Uses the same autocast setting as the training-time reference pass.
+    """
 
     cached = []
     for batch in val_batches:
-        chosen, rejected = pair_logprobs(reference, batch, pad_token_id)
+        with torch.autocast(device_type="cuda", dtype=torch.float16, enabled=use_amp):
+            chosen, rejected = pair_logprobs(reference, batch, pad_token_id)
         cached.append((chosen.float().cpu(), rejected.float().cpu()))
     return cached
 
@@ -98,9 +102,10 @@ def main() -> None:
     policy = AutoModelForCausalLM.from_pretrained(cfg["sft_checkpoint"], torch_dtype=torch.float32).to(policy_device)
     policy.config.use_cache = False
     policy.train()
-    # Frozen reference: a second copy of the same SFT checkpoint, fp16, never updated.
-    reference_dtype = torch.float16 if reference_device.type == "cuda" else torch.float32
-    reference = AutoModelForCausalLM.from_pretrained(cfg["sft_checkpoint"], torch_dtype=reference_dtype).to(reference_device)
+    # Frozen reference: a second copy of the same SFT checkpoint, never updated. It is
+    # kept in fp32 like the policy so both run identical computations under autocast;
+    # at step 0 the two then agree exactly (all rewards 0, loss log 2).
+    reference = AutoModelForCausalLM.from_pretrained(cfg["sft_checkpoint"], torch_dtype=torch.float32).to(reference_device)
     reference.eval()
     reference.requires_grad_(False)
 
@@ -119,7 +124,7 @@ def main() -> None:
 
     val_size = cfg["eval_batch_size"]
     val_batches = [make_pair_batch(encoded_val[i : i + val_size], pad_token_id) for i in range(0, len(encoded_val), val_size)]
-    reference_cache = reference_val_logps(reference, val_batches, pad_token_id)
+    reference_cache = reference_val_logps(reference, val_batches, pad_token_id, use_amp)
 
     random.Random(cfg["seed"]).shuffle(encoded_train)
     batch_size, accum = cfg["per_device_batch_size"], cfg["gradient_accumulation_steps"]
