@@ -1,0 +1,68 @@
+{
+  "judge_model": "google/gemini-3.6-flash",
+  "target_model": "lora_dpo",
+  "baseline_model": "smollm2_instruct",
+  "num_pairs": 39,
+  "counts": {
+    "win": 13,
+    "loss": 13,
+    "tie": 13,
+    "unknown": 0,
+    "failure": 0
+  },
+  "rates": {
+    "win": 0.3333333333333333,
+    "loss": 0.3333333333333333,
+    "tie": 0.3333333333333333,
+    "unknown": 0.0,
+    "failure": 0.0
+  },
+  "win_rate_excluding_ties": 0.5,
+  "win_rate_ties_as_half": 0.5,
+  "judge_picked_position": {
+    "A": 13,
+    "B": 13
+  },
+  "requests_this_run": 8,
+  "retries_this_run": 0,
+  "failed_batches_this_run": 0,
+  "unresolved_failure_log": "outputs/persona_judged/run_a_persona_quality_judged_failures.jsonl",
+  "by_category": {
+    "coding": {
+      "counts": {
+        "tie": 3,
+        "win": 3,
+        "loss": 4
+      },
+      "win_rate_excluding_ties": 0.42857142857142855,
+      "win_rate_ties_as_half": 0.45
+    },
+    "cooking": {
+      "counts": {
+        "loss": 5,
+        "win": 3,
+        "tie": 2
+      },
+      "win_rate_excluding_ties": 0.375,
+      "win_rate_ties_as_half": 0.4
+    },
+    "general_help": {
+      "counts": {
+        "win": 4,
+        "loss": 3,
+        "tie": 3
+      },
+      "win_rate_excluding_ties": 0.5714285714285714,
+      "win_rate_ties_as_half": 0.55
+    },
+    "safety_sensitive": {
+      "counts": {
+        "tie": 5,
+        "win": 3,
+        "loss": 1
+      },
+      "win_rate_excluding_ties": 0.75,
+      "win_rate_ties_as_half": 0.6111111111111112
+    }
+  }
+}
