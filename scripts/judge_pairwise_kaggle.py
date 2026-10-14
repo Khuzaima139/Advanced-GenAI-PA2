@@ -40,7 +40,7 @@ def main() -> None:
     parser.add_argument("--sleep_seconds", type=float, default=5.0)
     parser.add_argument("--max_retries", type=int, default=3)
     parser.add_argument("--reuse_judgments", action="store_true")
-    parser.add_argument("--eval_type", choices=["auto", "general", "safety"], default="auto")
+    parser.add_argument("--eval_type", choices=["auto", "general", "safety", "persona_style", "persona_quality"], default="auto")
     parser.add_argument("--request_timeout", type=float, default=120.0, help="seconds before a request counts as failed")
     args = parser.parse_args()
     if args.sleep_seconds < 5:

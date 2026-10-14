@@ -36,6 +36,13 @@ def load_model_for_generation(model_name_or_path: str, device: torch.device):
     return model, tokenizer
 
 
+def build_prompt(tokenizer, instruction: str, use_chat_template: bool) -> str:
+    if not use_chat_template:
+        return format_prompt(instruction)
+    messages = [{"role": "user", "content": instruction.strip()}]
+    return tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+
+
 @torch.no_grad()
 def generate_responses(
     model,
@@ -46,13 +53,19 @@ def generate_responses(
     repetition_penalty: float = 1.1,
     no_repeat_ngram_size: int = 0,
     max_prompt_length: int | None = None,
+    use_chat_template: bool = False,
 ) -> list[str]:
-    """Greedy-decode one response per instruction, preserving input order."""
+    """Greedy-decode one response per instruction, preserving input order.
+
+    use_chat_template=False wraps instructions in the fixed plain-text template
+    used for the Qwen SFT/DPO track. use_chat_template=True uses the tokenizer's
+    own chat template, as for chat models trained through it (the persona task).
+    """
 
     device = next(model.parameters()).device
     outputs: list[str] = []
     for start in range(0, len(instructions), batch_size):
-        prompts = [format_prompt(text) for text in instructions[start : start + batch_size]]
+        prompts = [build_prompt(tokenizer, text, use_chat_template) for text in instructions[start : start + batch_size]]
         encoded = tokenizer(
             prompts,
             return_tensors="pt",

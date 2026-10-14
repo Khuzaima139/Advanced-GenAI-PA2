@@ -11,7 +11,7 @@ import json
 import random
 from pathlib import Path
 
-DECODING_KEYS = ("decoding", "max_new_tokens", "repetition_penalty", "no_repeat_ngram_size", "eval_set_path")
+DECODING_KEYS = ("decoding", "prompt_format", "max_new_tokens", "repetition_penalty", "no_repeat_ngram_size", "eval_set_path")
 
 
 def load_generations(path: str) -> dict[str, dict]:

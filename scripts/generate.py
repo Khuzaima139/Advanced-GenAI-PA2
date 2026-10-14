@@ -24,6 +24,7 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=None, help="only use the first N prompts")
     parser.add_argument("--device", default=None)
     parser.add_argument("--seed", type=int, default=42)
+    parser.add_argument("--chat_template", action="store_true", help="format prompts with the tokenizer's chat template")
     args = parser.parse_args()
 
     torch.manual_seed(args.seed)
@@ -44,6 +45,7 @@ def main() -> None:
         batch_size=args.batch_size,
         repetition_penalty=args.repetition_penalty,
         no_repeat_ngram_size=args.no_repeat_ngram_size,
+        use_chat_template=args.chat_template,
     )
 
     records = []
@@ -68,6 +70,7 @@ def main() -> None:
         "eval_set_path": args.eval_set_path,
         "num_prompts": len(records),
         "decoding": "greedy",
+        "prompt_format": "chat_template" if args.chat_template else "plain_template",
         "max_new_tokens": args.max_new_tokens,
         "repetition_penalty": args.repetition_penalty,
         "no_repeat_ngram_size": args.no_repeat_ngram_size,

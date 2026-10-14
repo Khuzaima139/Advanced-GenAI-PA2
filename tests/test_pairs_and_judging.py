@@ -45,7 +45,7 @@ def test_pairs_are_blinded_randomized_and_traceable(tmp_path):
         a_model = p["hidden"]["model_a"]
         assert p["response_a"].startswith(a_model)
         assert p["response_b"].startswith(p["hidden"]["model_b"])
-    prompt = build_judge_prompt(pairs[:5], safety=True)
+    prompt = build_judge_prompt(pairs[:5], "safety")
     assert "hidden" not in prompt and "model_a" not in prompt and "target_model" not in prompt
 
 
@@ -54,7 +54,7 @@ def test_judge_prompt_never_contains_model_identity(tmp_path):
     pairs = read_jsonl(out)
     for p in pairs:
         p["response_a"], p["response_b"] = "first text", "second text"
-    prompt = build_judge_prompt(pairs[:5], safety=False)
+    prompt = build_judge_prompt(pairs[:5], "general")
     assert "dpo" not in prompt.lower() and "sft" not in prompt.lower()
     assert "Response A" in prompt and "Response B" in prompt
 
@@ -147,3 +147,18 @@ def test_hung_request_times_out_and_is_retried(tmp_path):
     assert _time.time() - start < 5
     assert len(calls) == 2 and summary["retries_this_run"] == 1
     assert summary["counts"]["failure"] == 0
+
+
+def test_persona_rubrics_are_selected_explicitly(tmp_path):
+    _, out = build_pairs(tmp_path, n=5)
+    pairs = read_jsonl(out)
+    prompts = []
+
+    def judge(prompt):
+        prompts.append(prompt)
+        return json.dumps([{"item": i, "winner": "A"} for i in range(1, 6)])
+
+    run_judging(pairs, tmp_path / "s.jsonl", tmp_path / "s_f.jsonl", judge, "fake", eval_type="persona_style", sleep_fn=lambda s: None)
+    run_judging(pairs, tmp_path / "q.jsonl", tmp_path / "q_f.jsonl", judge, "fake", eval_type="persona_quality", sleep_fn=lambda s: None)
+    assert "celebrity-chef persona" in prompts[0] and "Ignore tone, persona, and style" in prompts[1]
+    assert {r["eval_type"] for r in read_jsonl(tmp_path / "s.jsonl")} == {"persona_style"}
