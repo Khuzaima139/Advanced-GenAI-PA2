@@ -1,6 +1,7 @@
-"""Training plots for the SFT and the two from-scratch DPO runs.
+"""Training plots for the SFT run, the two from-scratch DPO runs and the LoRA-DPO runs.
 
-Reads results/{sft,dpo_hh,dpo_uf}/metrics.jsonl and writes PNG figures to
+Reads results/{sft,dpo_hh,dpo_uf}/metrics.jsonl and
+results/persona/run_{a,b,c}/{log_history,summary}.json and writes PNG figures to
 results/plots/. Training values are logged once per optimizer step window and
 are noisy, so they are drawn raw (faint) and with an exponential moving average;
 validation values are drawn unsmoothed.
@@ -17,7 +18,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
 
-BLUE, ORANGE = "#2a78d6", "#eb6834"
+BLUE, ORANGE, GREY = "#2a78d6", "#eb6834", "#8a8984"
 INK, MUTED, GRID = "#0b0b0b", "#52514e", "#e4e3df"
 EMA_ALPHA = 0.1
 
@@ -106,6 +107,49 @@ def plot_dpo(results: Path, out: Path) -> None:
     plt.close(fig)
 
 
+def plot_lora(results: Path, out: Path) -> None:
+    # Run C is the submitted adapter; A and B differ only in learning rate (B also in epochs).
+    runs = [
+        ("Run A (lr 2e-5, 3 ep)", "run_a", GREY),
+        ("Run B (lr 1e-4, 5 ep)", "run_b", ORANGE),
+        ("Run C (lr 5e-5, 3 ep, submitted)", "run_c", BLUE),
+    ]
+    panels = [
+        ("loss", "DPO loss", "DPO loss"),
+        ("rewards/accuracies", "reward accuracy", "Reward accuracy (r_w > r_l)"),
+        ("rewards/margins", "reward margin (r_w - r_l)", "Reward margin"),
+    ]
+    steps_per_epoch = 25
+    fig, axes = plt.subplots(1, 3, figsize=(13, 3.9), dpi=200)
+    for name, folder, color in runs:
+        run_dir = results / "persona" / folder
+        history = json.loads((run_dir / "log_history.json").read_text(encoding="utf-8"))
+        initial = json.loads((run_dir / "summary.json").read_text(encoding="utf-8"))["initial_eval"]
+        train = [r for r in history if "loss" in r]
+        evals = [{"step": 0, **initial}] + [r for r in history if "eval_loss" in r]
+        for ax, (key, _, _) in zip(axes, panels):
+            ax.plot([r["step"] for r in train], [r[key] for r in train], color=color, alpha=0.35,
+                    linewidth=1.2, label=f"{name} train (raw, 5-step window)")
+            ax.plot([r["step"] for r in evals], [r[f"eval_{key}"] for r in evals], color=color, linewidth=2,
+                    marker="o", markersize=4, label=f"{name} held-out (20 pairs)")
+            if folder == "run_c":
+                ax.plot(evals[-1]["step"], evals[-1][f"eval_{key}"], marker="*", markersize=13, color=color,
+                        markeredgecolor=INK, linestyle="none", label="submitted adapter (Run C, step 75)")
+    for ax, (_, ylabel, title) in zip(axes, panels):
+        for boundary in range(steps_per_epoch, 126, steps_per_epoch):
+            ax.axvline(boundary, color=GRID, linewidth=1, linestyle="--", zorder=0)
+        style(ax, "optimizer step (dashed lines: epoch boundaries)", ylabel, title)
+    handles, labels = axes[0].get_legend_handles_labels()
+    # Plot order is (train, held-out) for A, B, C, then the star; legends fill column by column,
+    # so with two rows each column is one run and the star sits alone in the last column.
+    fig.legend(handles, labels, loc="lower center", ncol=4, frameon=False, fontsize=8, labelcolor=INK)
+    fig.suptitle("LoRA-DPO on SmolLM2-360M-Instruct persona pairs (beta 0.1, effective batch 8; "
+                 "final step = saved adapter)", x=0.01, ha="left", color=INK, fontsize=12)
+    fig.tight_layout(rect=(0, 0.14, 1, 0.95))
+    fig.savefig(out / "lora_dpo_training.png")
+    plt.close(fig)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--results_dir", default="results")
@@ -115,7 +159,8 @@ def main() -> None:
     out.mkdir(parents=True, exist_ok=True)
     plot_sft(results, out)
     plot_dpo(results, out)
-    print(f"wrote {out / 'sft_loss.png'} and {out / 'dpo_training.png'}")
+    plot_lora(results, out)
+    print(f"wrote {out / 'sft_loss.png'}, {out / 'dpo_training.png'} and {out / 'lora_dpo_training.png'}")
 
 
 if __name__ == "__main__":
