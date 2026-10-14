@@ -1,0 +1,7 @@
+{
+  "steps": 938,
+  "total_steps": 938,
+  "best_val_loss": 1.397676151977109,
+  "runtime_min": 87.5,
+  "peak_mem_gb": 12.99
+}

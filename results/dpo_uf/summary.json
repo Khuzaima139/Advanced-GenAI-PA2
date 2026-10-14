@@ -1,0 +1,8 @@
+{
+  "steps": 469,
+  "total_steps": 469,
+  "best_val_reward_accuracy": 0.7179999947547913,
+  "best_val_reward_margin": 0.785388708114624,
+  "runtime_min": 111.0,
+  "peak_mem_gb": 12.99
+}

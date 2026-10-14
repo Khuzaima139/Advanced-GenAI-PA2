@@ -1,0 +1,13 @@
+{
+  "model_name_or_path": "/kaggle/input/notebooks/khuzaima13/genai-pa2-dpo/Advanced-GenAI-PA2/outputs/dpo_uf/best",
+  "eval_set_path": "eval_sets/alpaca_eval_300_seed42.json",
+  "num_prompts": 300,
+  "decoding": "greedy",
+  "max_new_tokens": 512,
+  "repetition_penalty": 1.1,
+  "no_repeat_ngram_size": 0,
+  "batch_size": 16,
+  "dtype": "torch.float16",
+  "device": "cuda:1",
+  "seed": 42
+}
