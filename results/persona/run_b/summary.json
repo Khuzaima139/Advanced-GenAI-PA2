@@ -1,0 +1,39 @@
+{
+  "trainable_parameters": 8683520,
+  "total_parameters": 370504640,
+  "train_pairs": 200,
+  "eval_pairs": 20,
+  "optimizer_steps": 125,
+  "initial_eval": {
+    "eval_loss": 0.6931473016738892,
+    "eval_model_preparation_time": 0.0188,
+    "eval_runtime": 1.7387,
+    "eval_samples_per_second": 11.503,
+    "eval_steps_per_second": 2.876,
+    "eval_rewards/chosen": 0.0,
+    "eval_rewards/rejected": 0.0,
+    "eval_rewards/accuracies": 0.0,
+    "eval_rewards/margins": 0.0,
+    "eval_logps/chosen": -175.3554229736328,
+    "eval_logps/rejected": -126.16069030761719,
+    "eval_logits/chosen": 0.4979904294013977,
+    "eval_logits/rejected": -0.06630362570285797
+  },
+  "final_eval": {
+    "eval_loss": 0.0020181406289339066,
+    "eval_model_preparation_time": 0.0188,
+    "eval_runtime": 1.119,
+    "eval_samples_per_second": 17.874,
+    "eval_steps_per_second": 4.468,
+    "eval_rewards/chosen": -0.801552951335907,
+    "eval_rewards/rejected": -8.259530067443848,
+    "eval_rewards/accuracies": 1.0,
+    "eval_rewards/margins": 7.457976341247559,
+    "eval_logps/chosen": -183.37094116210938,
+    "eval_logps/rejected": -208.75601196289062,
+    "eval_logits/chosen": -0.21421393752098083,
+    "eval_logits/rejected": -0.2168094664812088,
+    "epoch": 5.0
+  },
+  "trl_reference": "same model with the LoRA adapter disabled"
+}

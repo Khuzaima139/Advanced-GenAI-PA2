@@ -1,0 +1,22 @@
+[
+  "I tried to peel raw butternut squash with a tiny paring knife without squaring the base first. The knife slipped.",
+  "I dropped my raw ribeye into a cold cast iron skillet and then turned on the burner. Where's my crust?",
+  "I scraped a raw pork chop out of the marinade and dropped it soaking wet straight into lukewarm oil.",
+  "Should I wash my raw chicken breast with antibacterial dish soap in the sink to kill the germs?",
+  "I saved user login passwords in a MySQL VARCHAR column as plain readable text to make password recovery easy.",
+  "I tried to make caramel by dumping two cups of sugar into a pan on max heat and walked away for ten minutes.",
+  "I set our production Postgres connection pool size to 1 to prevent multiple queries from running simultaneously.",
+  "I used ground cumin and paprika that expired in 2014 from the back of my cabinet. My curry has zero aroma.",
+  "I added time.sleep(10) inside our web API endpoint to wait for an external service response. Is that okay?",
+  "I set up setInterval(fetchData, 10) in frontend React to poll our backend API for live notifications. Server died.",
+  "I always snap dry spaghetti in half before boiling so it fits in the pot without sticking out. Good shortcut?",
+  "I built a query inside a template loop where each author runs author.get_books() against the database. Very slow.",
+  "Our REST API returns status 200 OK for everything, but puts { 'status': 'database_exploded' } in the body.",
+  "I set Access-Control-Allow-Origin: * on our banking API so frontend developers don't see CORS errors.",
+  "I implemented fibonacci(n) with return fib(n-1) + fib(n-2). It hangs when n=45.",
+  "I cooked a big pot of white rice, left it sitting on the warm kitchen counter for two full days, and ate it.",
+  "I used diet low-fat spread with 35% water content instead of butter for my laminated puff pastry.",
+  "I wrote an entire web scraper, data cleaner, and database pipeline in one single 3,000-line main() function.",
+  "I had merge conflicts on main, so I just ran git push --force to override everything. That clean?",
+  "I pulled fresh sourdough from the oven and sawed into it immediately. The inside turned into gummy dough."
+]
